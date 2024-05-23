@@ -65,7 +65,8 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     try {
-      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -91,22 +92,26 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
 
       final User? user = userCredential.user;
       if (user != null) {
         Navigator.pushReplacementNamed(context, '/main');
       }
     } catch (e) {
-      print('Google sign-in error: $e');  // Detailed error logging
+      print('Google sign-in error: $e'); // Detailed error logging
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed. Please try again. Error: $e')),
+        SnackBar(
+            content:
+                Text('Google sign-in failed. Please try again. Error: $e')),
       );
     }
   }

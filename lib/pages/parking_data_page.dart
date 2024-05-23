@@ -9,25 +9,50 @@ class ParkingDataPage extends StatefulWidget {
 }
 
 class _ParkingDataPageState extends State<ParkingDataPage> {
-  late Future<List<Map<String, dynamic>>> _parkingData;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Map<String, dynamic>? latestData;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _parkingData = _fetchParkingData();
+    _fetchLatestParkingData();
   }
 
-  Future<List<Map<String, dynamic>>> _fetchParkingData() async {
+  Future<void> _fetchLatestParkingData() async {
     try {
-      final QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('detections').get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      final snapshot = await _firestore
+          .collection('detections')
+          .orderBy('time', descending: true)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+          latestData = snapshot.docs.first.data();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          latestData = null;
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error fetching parking data: $e');
-      return [];
+      setState(() {
+        latestData = null;
+        isLoading = false;
+      });
     }
+  }
+
+  Future<void> _markVehicleAsParked(String vehicleId) async {
+    // Add your logic here to mark the vehicle as parked, e.g., update the Firestore document
+    await _firestore.collection('detections').doc(vehicleId).update({
+      'status': 'parked',
+    });
+    // Fetch the next latest parking data
+    _fetchLatestParkingData();
   }
 
   @override
@@ -36,32 +61,28 @@ class _ParkingDataPageState extends State<ParkingDataPage> {
       appBar: AppBar(
         title: const Text('Parking Data'),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _parkingData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No parking data found.'));
-          } else {
-            final parkingData = snapshot.data!;
-            return ListView.builder(
-              itemCount: parkingData.length,
-              itemBuilder: (context, index) {
-                final data = parkingData[index];
-                return ListTile(
-                  title: Text('Vehicle ID: ${data['vehicleId']}'),
-                  subtitle: Text(
-                    'Class: ${data['class']}\nEntry Time: ${DateTime.fromMillisecondsSinceEpoch(data['entryTime'] * 1000)}',
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : latestData == null
+              ? const Center(child: Text('No parking data found.'))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        title: Text('Vehicle ID: ${latestData!['VehicleID']}'),
+                        subtitle: Text(
+                          'Class: ${latestData!['class']} \nEntry Time: ${DateTime.fromMillisecondsSinceEpoch((latestData!['time'] * 1000).toInt())}',
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () =>
+                            _markVehicleAsParked(latestData!['VehicleID']),
+                        child: const Text('Mark as Parked'),
+                      ),
+                    ],
                   ),
-                );
-              },
-            );
-          }
-        },
-      ),
+                ),
     );
   }
 }

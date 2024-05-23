@@ -5,7 +5,7 @@ import 'pages/splash_screen.dart';
 import 'pages/login_page.dart';
 import 'pages/registration_page.dart';
 import 'pages/main_page.dart';
-import 'pages/parking_data_page.dart'; // Import the new page
+import 'pages/parking_data_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,14 +26,15 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner:
+          false, // Add this line to remove the debug banner
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegistrationPage(),
         '/main': (context) => const MainPage(),
-        '/parking': (context) => const ParkingDataPage(), // Add the route
+        '/parking_data': (context) => const ParkingDataPage(),
       },
     );
   }

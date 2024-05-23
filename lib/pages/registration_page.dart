@@ -70,7 +70,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _register() async {
     try {
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
